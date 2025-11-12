@@ -1,9 +1,9 @@
 package com.nek.api.service;
 
+import java.util.List;
+
 import com.nek.api.dto.UserRequestDTO;
 import com.nek.api.dto.UserResponseDTO;
-
-import java.util.List;
 
 public interface UserService {
     

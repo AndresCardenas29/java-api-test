@@ -1,11 +1,12 @@
 package com.nek.api.repository;
 
-import com.nek.api.entity.User;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.nek.api.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {

@@ -1,5 +1,11 @@
 package com.nek.api.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.nek.api.dto.UserRequestDTO;
 import com.nek.api.dto.UserResponseDTO;
 import com.nek.api.entity.User;
@@ -7,11 +13,6 @@ import com.nek.api.exception.DuplicateResourceException;
 import com.nek.api.exception.ResourceNotFoundException;
 import com.nek.api.repository.UserRepository;
 import com.nek.api.service.UserService;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional

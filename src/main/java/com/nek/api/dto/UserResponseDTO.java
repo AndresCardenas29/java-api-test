@@ -1,8 +1,8 @@
 package com.nek.api.dto;
 
-import com.nek.api.entity.User;
-
 import java.time.LocalDateTime;
+
+import com.nek.api.entity.User;
 
 public class UserResponseDTO {
 
