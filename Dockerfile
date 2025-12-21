@@ -29,8 +29,10 @@ USER spring:spring
 # Copiar el JAR desde la etapa de build
 COPY --from=build /app/target/*.jar app.jar
 
-# Exponer el puerto (por defecto Spring Boot usa 8080)
-EXPOSE 8080
+# Exponer el puerto configurable (por defecto 8080)
+ARG SERVER_PORT=8080
+ENV SERVER_PORT=${SERVER_PORT}
+EXPOSE ${SERVER_PORT}
 
 # Variables de entorno opcionales
 ENV JAVA_OPTS="-Xmx512m -Xms256m"

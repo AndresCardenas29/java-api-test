@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:  # Permite ejecutar manualmente desde GitHub
 
 jobs:
@@ -14,13 +15,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "webhook_url=https://dp.nekdress.xyz/api/deploy/pFtVMwCmyr9-zr9f1d7yb" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "webhook_url=https://dp.nekdress.xyz/api/deploy/QUYi6cpWHBOGpUyXF0m27" >> $GITHUB_OUTPUT
+          fi
+
       - name: Trigger Dokploy Deployment
         run: |
-          curl -X POST http://192.168.0.228:3000/api/deploy/xwK4tfD_I2Y1Bl_vKf6Ig
-          echo "✅ Deployment triggered successfully!"
+          echo "🚀 Deploying to ${{ steps.set-env.outputs.environment }} environment..."
+          curl -X POST ${{ steps.set-env.outputs.webhook_url }}
+          echo "✅ Deployment triggered successfully for ${{ steps.set-env.outputs.environment }}!"
 
       - name: Wait for deployment
         run: |
           echo "⏳ Waiting for deployment to complete..."
           sleep 10
-          echo "🚀 Deployment should be in progress. Check Dokploy dashboard for status."
+          echo "🎉 Deployment should be in progress. Check Dokploy dashboard for status."
