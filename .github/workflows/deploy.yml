@@ -1,0 +1,26 @@
+name: Deploy to VPS via Dokploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X POST http://192.168.0.228:3000/api/deploy/xwK4tfD_I2Y1Bl_vKf6Ig
+          echo "✅ Deployment triggered successfully!"
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 10
+          echo "🚀 Deployment should be in progress. Check Dokploy dashboard for status."
