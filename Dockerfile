@@ -4,6 +4,9 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
+# Build argument para invalidar cache en cada commit
+ARG CACHEBUST=1
+
 # Copiar archivos de configuración de Maven primero (para aprovechar cache)
 COPY pom.xml .
 COPY mvnw .
@@ -15,7 +18,7 @@ RUN mvn dependency:go-offline -B
 # Copiar el código fuente
 COPY src ./src
 
-# Compilar la aplicación
+# Compilar la aplicación (siempre limpia y recompila)
 RUN mvn clean package -DskipTests -B
 
 # Etapa 2: Runtime
