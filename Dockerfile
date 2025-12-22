@@ -4,7 +4,7 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copiar archivos de configuración de Maven primero (para aprovechar cache de dependencias)
+# Copiar archivos de configuración de Maven primero (para aprovechar cache)
 COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
@@ -12,14 +12,11 @@ COPY .mvn .mvn
 # Descargar dependencias (esta capa se cachea si pom.xml no cambia)
 RUN mvn dependency:go-offline -B
 
-# Invalidar cache solo para el código fuente (mantiene dependencias en cache)
-ARG CACHEBUST=1
-
-# Copiar el código fuente (esta capa siempre se invalida con CACHEBUST)
+# Copiar el código fuente
 COPY src ./src
 
-# Compilar solo el código (usa las dependencias ya descargadas)
-RUN mvn package -DskipTests -B
+# Compilar la aplicación
+RUN mvn clean package -DskipTests -B
 
 # Etapa 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
