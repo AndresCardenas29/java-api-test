@@ -21,9 +21,11 @@ jobs:
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "webhook_url=https://dp.nekdress.xyz/api/deploy/pFtVMwCmyr9-zr9f1d7yb" >> $GITHUB_OUTPUT
+            echo "container_id=38f12cdbd07b" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             echo "environment=development" >> $GITHUB_OUTPUT
             echo "webhook_url=https://dp.nekdress.xyz/api/deploy/QUYi6cpWHBOGpUyXF0m27" >> $GITHUB_OUTPUT
+            echo "container_id=e8a8ff48c881" >> $GITHUB_OUTPUT
           fi
 
       - name: Trigger Dokploy Deployment
@@ -32,8 +34,23 @@ jobs:
           curl -X POST ${{ steps.set-env.outputs.webhook_url }}
           echo "✅ Deployment triggered successfully for ${{ steps.set-env.outputs.environment }}!"
 
-      - name: Wait for deployment
+      - name: Wait for build to complete
         run: |
-          echo "⏳ Waiting for deployment to complete..."
-          sleep 10
-          echo "🎉 Deployment should be in progress. Check Dokploy dashboard for status."
+          echo "⏳ Waiting for build to complete..."
+          sleep 60
+          echo "✅ Build should be complete, proceeding to restart container..."
+
+      - name: Restart Container
+        run: |
+          echo "🔄 Restarting ${{ steps.set-env.outputs.environment }} container..."
+          curl -X POST 'https://dp.nekdress.xyz/api/docker.restartContainer' \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d "{\"containerId\": \"${{ steps.set-env.outputs.container_id }}\"}"
+          echo "✅ Container restart triggered!"
+
+      - name: Wait for restart
+        run: |
+          echo "⏳ Waiting for container to restart..."
+          sleep 15
+          echo "🎉 Deployment complete! Your changes should now be live."
