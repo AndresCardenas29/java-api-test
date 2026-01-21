@@ -10,7 +10,10 @@ COPY mvnw .
 COPY .mvn .mvn
 
 # Descargar dependencias (esta capa se cachea si pom.xml no cambia)
-RUN mvn dependency:go-offline -B
+# Usamos resolve y resolve-plugins además de go-offline para asegurar que se descarguen la mayoría de dependencias
+RUN mvn dependency:resolve -B && \
+    mvn dependency:resolve-plugins -B && \
+    mvn dependency:go-offline -B
 
 # Copiar el código fuente
 COPY src ./src
