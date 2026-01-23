@@ -32,6 +32,6 @@ public class MainController {
 
     @GetMapping
     public String getAllUsers() {
-        return "Hello from MainController intento 25 para autodeploy! pero con Dockerfile optimizado. Probando Dokploy. Prueba para hacer deploy en QA y hacer PR a PROD";
+        return "Hello from MainController intento 25 para autodeploy! pero con Dockerfile optimizado. Probando Dokploy. Prueba para hacer deploy en QA y hacer PR a PROD. Haciendo pr desde la shell";
     }
 }
