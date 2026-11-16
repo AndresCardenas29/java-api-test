@@ -1,17 +1,20 @@
 package com.nek.api.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nek.api.dto.UserFilter;
 import com.nek.api.dto.UserRequestDTO;
 import com.nek.api.dto.UserResponseDTO;
 import com.nek.api.entity.User;
 import com.nek.api.exception.DuplicateResourceException;
 import com.nek.api.exception.ResourceNotFoundException;
 import com.nek.api.repository.UserRepository;
+import com.nek.api.repository.UserSpecifications;
 import com.nek.api.service.UserService;
 
 @Service
@@ -25,95 +28,64 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
-        // Verificar si el email ya existe
-        if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
-            throw new DuplicateResourceException("Usuario", "email", userRequestDTO.getEmail());
+    public UserResponseDTO createUser(UserRequestDTO request) {
+        String email = normalizeEmail(request.email());
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("Usuario", "email", email);
         }
-
         User user = new User();
-        user.setFirstName(userRequestDTO.getFirstName());
-        user.setLastName(userRequestDTO.getLastName());
-        user.setEmail(userRequestDTO.getEmail());
-        user.setPhone(userRequestDTO.getPhone());
-
-        User savedUser = userRepository.save(user);
-        return new UserResponseDTO(savedUser);
+        apply(user, request, email);
+        return UserResponseDTO.from(userRepository.save(user));
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-        return new UserResponseDTO(user);
+        return UserResponseDTO.from(find(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserResponseDTO::new)
-                .collect(Collectors.toList());
+    public Page<UserResponseDTO> findUsers(UserFilter filter, Pageable pageable) {
+        return userRepository.findAll(UserSpecifications.matching(filter), pageable).map(UserResponseDTO::from);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<UserResponseDTO> getActiveUsers() {
-        return userRepository.findByActive(true).stream()
-                .map(UserResponseDTO::new)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-
-        // Verificar si el email ya existe en otro usuario
-        if (!user.getEmail().equals(userRequestDTO.getEmail()) && 
-            userRepository.existsByEmail(userRequestDTO.getEmail())) {
-            throw new DuplicateResourceException("Usuario", "email", userRequestDTO.getEmail());
+    public UserResponseDTO updateUser(Long id, UserRequestDTO request) {
+        User user = find(id);
+        String email = normalizeEmail(request.email());
+        if (userRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+            throw new DuplicateResourceException("Usuario", "email", email);
         }
-
-        user.setFirstName(userRequestDTO.getFirstName());
-        user.setLastName(userRequestDTO.getLastName());
-        user.setEmail(userRequestDTO.getEmail());
-        user.setPhone(userRequestDTO.getPhone());
-
-        User updatedUser = userRepository.save(user);
-        return new UserResponseDTO(updatedUser);
+        apply(user, request, email);
+        return UserResponseDTO.from(userRepository.save(user));
     }
 
     @Override
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-        userRepository.delete(user);
+        userRepository.delete(find(id));
     }
 
     @Override
-    public void deactivateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-        user.setActive(false);
-        userRepository.save(user);
+    public UserResponseDTO setActive(Long id, boolean active) {
+        User user = find(id);
+        user.setActive(active);
+        return UserResponseDTO.from(userRepository.save(user));
     }
 
-    @Override
-    public void activateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-        user.setActive(true);
-        userRepository.save(user);
+    private User find(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserResponseDTO> searchUsers(String searchTerm) {
-        return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-                searchTerm, searchTerm).stream()
-                .map(UserResponseDTO::new)
-                .collect(Collectors.toList());
+    private static void apply(User user, UserRequestDTO request, String email) {
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+        user.setEmail(email);
+        user.setPhone(request.phone() == null || request.phone().isBlank() ? null : request.phone().trim());
+    }
+
+    /** El email se guarda en minúsculas y sin espacios: evita duplicados como Ana@x.com y ana@x.com. */
+    private static String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

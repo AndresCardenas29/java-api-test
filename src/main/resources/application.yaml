@@ -1,5 +1,6 @@
 server:
   port: ${SERVER_PORT:8080}
+  shutdown: graceful
 
 spring:
   application:
@@ -12,3 +13,26 @@ spring:
     hibernate:
       ddl-auto: ${DDL_AUTO:validate}
     show-sql: ${SHOW_SQL:false}
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
+# Documentación interactiva: /docs (Swagger UI) y /v3/api-docs (OpenAPI JSON)
+springdoc:
+  swagger-ui:
+    path: /docs
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+# Salud del servicio para Docker / Dokploy: /actuator/health
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
