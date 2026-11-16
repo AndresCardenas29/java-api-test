@@ -40,5 +40,8 @@ EXPOSE ${SERVER_PORT}
 # Variables de entorno opcionales
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
+# Salud del contenedor (Dokploy / Docker la usan para saber si la API está lista)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3   CMD wget -qO- "http://127.0.0.1:${SERVER_PORT}/actuator/health" | grep -q '"UP"' || exit 1
+
 # Comando de inicio
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
